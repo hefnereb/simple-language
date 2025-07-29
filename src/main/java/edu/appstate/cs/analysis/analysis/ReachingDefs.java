@@ -17,6 +17,7 @@ public class ReachingDefs {
     public static class Def {
         private String name;
         private String loc;
+
         public Def(String name, String loc) {
             this.name = name;
             this.loc = loc;
@@ -29,7 +30,8 @@ public class ReachingDefs {
 
         @Override
         public boolean equals(Object o) {
-            if (o == null || getClass() != o.getClass()) return false;
+            if (o == null || getClass() != o.getClass())
+                return false;
             Def def = (Def) o;
             return Objects.equals(name, def.name) && Objects.equals(loc, def.loc);
         }
@@ -59,7 +61,7 @@ public class ReachingDefs {
         Map<String, Set<Def>> defs = new HashMap<>(); // A map from variable name to the set of defs of that name
         for (String nodeId : gen.keySet()) {
             for (Def def : gen.get(nodeId)) {
-                if (! defs.containsKey(def.name)) {
+                if (!defs.containsKey(def.name)) {
                     defs.put(def.name, new HashSet<>());
                 }
                 defs.get(def.name).add(def);
@@ -98,7 +100,7 @@ public class ReachingDefs {
             reachIn.put(cfg.getNodeId(n), Collections.emptySet());
             reachOut.put(cfg.getNodeId(n), Collections.emptySet());
         }
-        
+
         Map<String, Set<Def>> oldReachIn = Collections.emptyMap();
         Map<String, Set<Def>> oldReachOut = Collections.emptyMap();
         do {
@@ -119,7 +121,14 @@ public class ReachingDefs {
                 }
                 reachIn.put(nLabel, defsFromPredecessors);
 
-                // TODO: Compute reach out!
+                Set<Def> in = reachIn.get(nLabel);
+                Set<Def> kill = kills.getOrDefault(nLabel, Collections.emptySet());
+                Set<Def> genSet = gen.getOrDefault(nLabel, Collections.emptySet());
+
+                Set<Def> out = new HashSet<>(in);
+                out.removeAll(kill);
+                out.addAll(genSet);
+                reachOut.put(nLabel, out);
             }
 
         } while (!reachIn.equals(oldReachIn) || !reachOut.equals(oldReachOut));
@@ -132,19 +141,23 @@ public class ReachingDefs {
 
         @Override
         public Set<Def> visitStmtList(StmtList stmtList) {
-            return Set.of();        }
+            return Set.of();
+        }
 
         @Override
         public Set<Def> visitElseIfList(ElseIfList elseIfList) {
-            return Set.of();        }
+            return Set.of();
+        }
 
         @Override
         public Set<Def> visitExprList(ExprList exprList) {
-            return Set.of();        }
+            return Set.of();
+        }
 
         @Override
         public Set<Def> visitElseIf(ElseIf elseIf) {
-            return Set.of();        }
+            return Set.of();
+        }
 
         @Override
         public Set<Def> visitIfStmt(IfStmt ifStmt) {
